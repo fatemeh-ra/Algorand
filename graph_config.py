@@ -1,7 +1,7 @@
 
 Num_of_Nodes = 100
 
-Block_size = 1000
+Block_size = 100000000
 
 Region_List = ["Amsterdam", "Brussels", "Chicago", "London", "Madrid", "Melbourne", "Moscow", "NewYork", "Paris",
                "Seoul", "Shanghai", "Sydney", "Tokyo", "Toronto", "Washington", "NEW_Dehli"]

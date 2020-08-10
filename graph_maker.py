@@ -23,6 +23,11 @@ for N in Nodes:
 
 
 file = open("graph1_100.txt", "w")
+General_Info = {}
+General_Info['Num_of_Nodes'] = Num_of_Nodes
+General_Info['Num_of_Regions'] = len(Region_List)
+file.write(json.dumps(General_Info)+'\n')
+
 for i in range(Num_of_Nodes):
     Node_Download_Bandwidth.append(floor(np.random.normal(DOWNLOAD_BANDWIDTH[Node_Region[i]],
                                                REGION_VARIANCE[Node_Region[i]] * 100000)))
@@ -35,7 +40,6 @@ for i in range(Num_of_Nodes):
     Info['Upload'] = Node_Upload_bandwidth[i]
     Info_String = json.dumps(Info)
     file.write(Info_String+'\n')
-
 
 for i in range(Num_of_Nodes):
     for j in range(Num_of_Nodes):
