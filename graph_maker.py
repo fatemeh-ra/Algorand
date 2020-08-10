@@ -36,7 +36,7 @@ for i in range(Num_of_Nodes):
     Info = {}
     Info['Region_id'] = Node_Region[i] + 1
     Info['Region_name'] = Region_List[Node_Region[i]]
-    Info['Dowload'] = Node_Download_Bandwidth[i]
+    Info['Download'] = Node_Download_Bandwidth[i]
     Info['Upload'] = Node_Upload_bandwidth[i]
     Info_String = json.dumps(Info)
     file.write(Info_String+'\n')
