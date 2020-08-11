@@ -1,4 +1,6 @@
 from Network import *
 from Node import *
 
-init_Network('graph1_100.txt')
+if __name__ == "__main__":
+    init_Network('graph1_100.txt')
+

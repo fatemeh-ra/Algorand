@@ -1,10 +1,21 @@
 import json
 import numpy as np
 from Node import *
+from sortedcontainers import SortedList
+from enum import Enum
 
 Num_of_Nodes = 0
 All_Nodes = []
 Block_Delays = []
+EventQ = SortedList()
+
+
+class EventType(int, Enum):
+    BLOCK_PROPOSE_EVENT = 1
+    BLOCK_GOSSIP_EVENT = 2
+    SOURCE_NODE_GOSSIP_EVENT = 3
+    FINAL_RESULT_EVENT = 4
+
 
 def init_Network(path):
     file = open(path, 'r')
@@ -21,4 +32,3 @@ def init_Network(path):
         for j in range(Num_of_Nodes):
             delay = [int(x) for x in file.readline().split()]
             Block_Delays.append(delay)
-
