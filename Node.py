@@ -1,5 +1,5 @@
 
-class Node:
+class Node(object):
 
     def __init__(self, Id, Download, Upload, incentive, region_id, region_name):
         self.Node_Id = Id
