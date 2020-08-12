@@ -2,6 +2,7 @@ from graph_config import *
 import numpy as np
 import json
 from math import floor
+import secrets
 
 Region_Ranges = REGION_DISTRIBUTION.copy()
 tmp = 0
@@ -26,6 +27,7 @@ file = open("graph1_100.txt", "w")
 General_Info = {}
 General_Info['Num_of_Nodes'] = Num_of_Nodes
 General_Info['Num_of_Regions'] = len(Region_List)
+General_Info['Prev_Block'] = secrets.randbits(256)
 file.write(json.dumps(General_Info)+'\n')
 
 for i in range(Num_of_Nodes):
@@ -38,6 +40,7 @@ for i in range(Num_of_Nodes):
     Info['Region_name'] = Region_List[Node_Region[i]]
     Info['Download'] = Node_Download_Bandwidth[i]
     Info['Upload'] = Node_Upload_bandwidth[i]
+    Info['Credit'] = floor(np.random.random()*100)
     Info_String = json.dumps(Info)
     file.write(Info_String+'\n')
 

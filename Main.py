@@ -1,8 +1,10 @@
-from Network import *
 from Node import *
 from Event import *
 import Config
 import sys
+from math import floor
+import json
+import numpy as np
 
 
 def execute_event(event):
@@ -22,7 +24,7 @@ def execute_event(event):
         target_node.compute_final_result()
 
     else:
-        print("Event Type is not recognised")
+        print("Event Type is not recognized")
 
 
 def handler(signum, frame):
@@ -30,10 +32,31 @@ def handler(signum, frame):
     sys.exit()
 
 
+def init_network(path):
+    global Num_of_Nodes
+    file = open(path, 'r')
+    general_info = json.loads(file.readline())
+    Num_of_Nodes = general_info['Num_of_Nodes']
+    prev_block = general_info['Prev_Block']
+
+    for i in range(Num_of_Nodes):
+        info = json.loads(file.readline())
+        incentive = np.random.random()
+        n = Node(i, info['Download'], info['Upload'], incentive, info['Region_id']
+                 , info['Region_name'], prev_block, info['Credit'])
+        All_Nodes.append(n)
+
+    for i in range(Num_of_Nodes):
+        for j in range(Num_of_Nodes):
+            delay = [int(x) for x in file.readline().split()]
+            Block_Delays.append(delay)
+
+
 if __name__ == "__main__":
     init_network('graph1_100.txt')
+    print("Hello! Simulation Started!\n" + "Using "+str(Num_of_Nodes)+" in this Simulation")
 
-    proposer_node_id = np.random.random(Num_of_Nodes)
+    proposer_node_id = floor(np.random.random()*Num_of_Nodes)
     node = All_Nodes[proposer_node_id]
     event = Event(0,
                   0,
@@ -48,6 +71,7 @@ if __name__ == "__main__":
 
     while len(EventQ):
         ev = EventQ.pop(0)
+        print(ev)
         execute_event(ev)
 
     print("Simulation Completed!")

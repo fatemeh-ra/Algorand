@@ -9,22 +9,25 @@ import random
 
 class Node(object):
 
-    def __init__(self, Id, Download, Upload, incentive, region_id, region_name):
+    def __init__(self, Id, Download, Upload, incentive, region_id, region_name, prev_block, credit):
         self.Node_Id = Id
         self.Download_bandwidth = Download
         self.Upload_bandwidth = Upload
         self.Incentive = incentive
         self.Region_Id = region_id
         self.Region_Name = region_name
-        self.Credit = 0
+        self.Credit = credit
         self.Peer_list = []
         # self.Message_received = []
-        self.Block_Chain = []
+        self.Block_Chain = [prev_block]
         self.Incoming_Block = []
         self.Received_New_Block = False
 
         self.Sent_Gossip_Messages = []
         self.Block_Source_Nodes = []
+
+    def __str__(self):
+        return str(self.Node_Id)
 
     def propose_block(self, event):
         prev_block = self.Block_Chain[len(self.Block_Chain) - 1]
@@ -76,7 +79,7 @@ class Node(object):
 
             message.Add_Source_Node(self)
             for peer in self.Peer_list:
-                if event.Event_Time + Block_Delays[self.Node_Id][peer.Node_Id] - event.Ref_Time <= event.Time_Out:
+                if event.Event_Time + Block_Delays[self.Node_Id][peer.Node_Id] - event.Ref_Time < event.Time_Out:
                     self.send_msg(event, peer, Block_Delays[self.Node_Id][peer.Node_Id], message)
                 else:
                     pass
@@ -85,7 +88,7 @@ class Node(object):
 
     def send_source_node_gossip(self, event):
         if event.Msg_To_Deliver in self.Sent_Gossip_Messages:
-            pass
+            return
 
         self.Sent_Gossip_Messages.append(event.Msg_To_Deliver)
 
@@ -97,10 +100,7 @@ class Node(object):
                 random_node_cnt = random_node_cnt + 1
 
         for peer in self.Peer_list:
-            if event.Event_Time + Block_Delays[self.Node_Id][peer.Node_Id] - event.Ref_Time <= event.Time_Out:
-                self.send_msg(event, peer, Block_Delays[self.Node_Id][peer.Node_Id])
-            else:
-                pass
+            self.send_msg(event, peer, 0, event.Msg_To_Deliver)
 
         self.Peer_list.clear()
 
@@ -116,14 +116,17 @@ class Node(object):
                               event.Step_Number)
             EventQ.add(new_event)
 
-    def compute_final_result(self, event):
+    def compute_final_result(self):
         credits = Construct_DAG(self.Sent_Gossip_Messages)
-        sorted_credits = sorted(credits)
+        sorted_credits = sorted(credits.items(), key=lambda x: x[1], reverse=True)
         c = 0
-        print("DAG created for Node " + self.Node_Id + "Nodes in Final Result:")
-        for i in sorted_credits:
+        print("DAG created for Node " + str(self) + "Nodes in Final Result:")
+        for k, v in sorted_credits:
             if c < Config.DAG_MAX_NODE:
-                print(i.key, i.value)
+                print(str(k) + " with total credit = " + str(v))
+            else:
+                break
+            c += 1
 
     def send_msg(self, event, dstNode, deltaTime, msg):
         new_event = Event(event.Ref_Time,
@@ -133,7 +136,7 @@ class Node(object):
                           event.Time_Out,
                           dstNode,
                           self,
-                          event.roundNumber,
-                          event.stepNumber)
+                          event.Round_Number,
+                          event.Step_Number)
 
         EventQ.add(new_event)

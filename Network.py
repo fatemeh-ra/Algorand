@@ -1,8 +1,7 @@
-from Node import *
+# !/bin/python3
+
 from sortedcontainers import SortedList
 from enum import Enum
-import json
-import numpy as np
 
 Num_of_Nodes = 0
 All_Nodes = []
@@ -17,30 +16,13 @@ class Event_Type(int, Enum):
     FINAL_RESULT_EVENT = 4
 
 
-def init_network(path):
-    file = open(path, 'r')
-    general_info = json.loads(file.readline())
-    num_of_nodes = general_info['Num_of_Nodes']
-
-    for i in range(num_of_nodes):
-        info = json.loads(file.readline())
-        incentive = np.random.random()
-        n = Node(i, info['Download'], info['Upload'], incentive, info['Region_id'], info['Region_name'])
-        All_Nodes.append(n)
-
-    for i in range(num_of_nodes):
-        for j in range(num_of_nodes):
-            delay = [int(x) for x in file.readline().split()]
-            Block_Delays.append(delay)
-
-
 class Block(object):
     def __init__(self, randomString, prevBlockHash=None):
         self.transactions = randomString
         self.prevBlockHash = prevBlockHash
 
     def __str__(self):
-        return "\n" + "transactions = " + str(self.transactions) + "\t" + "prevBlockHash = " + str(self.prevBlockHash)
+        return "transactions = " + str(self.transactions) + "\t" + "prevBlockHash = " + str(self.prevBlockHash)
 
 
 class Block_Propose_Msg(object):
@@ -50,7 +32,7 @@ class Block_Propose_Msg(object):
         self.Source_List = []
 
     def __str__(self):
-        return "\n" + "block = " + str(self.block)
+        return "block propose message\n" + "block = " + str(self.block) + "\n"
 
     def Add_Source_Node(self, node):
         self.Source_List.append(node)
@@ -62,13 +44,12 @@ class Source_Gossip_Msg(object):
         self.Sender_Node = Sender
 
     def __str__(self):
-        return "\n" + "block from " + str(self.Sender_Node.Node_Id) + " to " + str(self.Receiver_Node.Node_Id)
+        return "Gossip message\n" + "block from " + str(self.Sender_Node) + " to " + str(self.Receiver_Node) + "\n"
 
 
 class No_Message(object):
     def __init__(self):
         pass
 
-    @property
     def __str__(self):
-        return '\n'.join(('{} = {}'.format(item, self.__dict__[item]) for item in self.__dict__))
+        return "No Message\n"
