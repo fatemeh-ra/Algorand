@@ -34,11 +34,28 @@ def init_network(path):
             Block_Delays.append(delay)
 
 
+class Block(object):
+    def __init__(self, randomString, prevBlockHash=None):
+        self.transactions = randomString
+        self.prevBlockHash = prevBlockHash
+
+    def __str__(self):
+        return "\n" + "transactions = " + str(self.transactions) + "\t" + "prevBlockHash = " + str(self.prevBlockHash)
+
+
+class Block_Propose_Msg(object):
+    def __init__(self, prevBlockHash, thisBlockContent, priorityMsgPayload):
+        self.block = Block(thisBlockContent, prevBlockHash)
+        self.sourceNode = self
+
+    def __str__(self):
+        return "\n" + "block = " + str(self.block) + "\n" + self.priorityMsgPayload.__str__()
+
+
 class No_Message(object):
     def __init__(self):
         pass
+
     @property
     def __str__(self):
         return '\n'.join(('{} = {}'.format(item, self.__dict__[item]) for item in self.__dict__))
-
-
