@@ -35,8 +35,15 @@ if __name__ == "__main__":
 
     proposer_node_id = np.random.random(Num_of_Nodes)
     node = All_Nodes[proposer_node_id]
-    event = Event(0, 0, Event_Type.BLOCK_PROPOSE_EVENT, No_Message(), Config.TIME_OUT_NOT_APPLICABLE, node, node, 1, 0)
-
+    event = Event(0,
+                  0,
+                  Event_Type.BLOCK_PROPOSE_EVENT,
+                  No_Message(),
+                  Config.TIME_OUT_NOT_APPLICABLE,
+                  node,
+                  node,
+                  1,
+                  0)
     EventQ.add(event)
 
     while len(EventQ):

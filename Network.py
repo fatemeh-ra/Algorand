@@ -1,8 +1,8 @@
-import json
-import numpy as np
 from Node import *
 from sortedcontainers import SortedList
 from enum import Enum
+import json
+import numpy as np
 
 Num_of_Nodes = 0
 All_Nodes = []
@@ -44,12 +44,21 @@ class Block(object):
 
 
 class Block_Propose_Msg(object):
-    def __init__(self, prevBlockHash, thisBlockContent, priorityMsgPayload):
+    def __init__(self, prevBlockHash, thisBlockContent):
         self.block = Block(thisBlockContent, prevBlockHash)
         self.sourceNode = self
 
     def __str__(self):
-        return "\n" + "block = " + str(self.block) + "\n" + self.priorityMsgPayload.__str__()
+        return "\n" + "block = " + str(self.block)
+
+
+class Source_Gossip_Msg(object):
+    def __init__(self, Receiver, Sender):
+        self.Receiver_Node = Receiver
+        self.Sender_Node = Sender
+
+    def __str__(self):
+        return "\n" + "block from " + str(self.Sender_Node.Node_Id) + " to " + str(self.Receiver_Node.Node_Id)
 
 
 class No_Message(object):
