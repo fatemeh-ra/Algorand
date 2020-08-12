@@ -60,6 +60,7 @@ class Node(object):
         EventQ.add(new_event)
 
         if not self.Received_New_Block:
+            self.Incoming_Block = event.Msg_To_Deliver.block
             self.Received_New_Block = True
 
             random_node_cnt = 0
@@ -77,9 +78,35 @@ class Node(object):
 
             self.Peer_list.clear()
 
-    def send_source_node_gossip(self):
-        pass
-        # TODO
+    def send_source_node_gossip(self, event):
+        self.Sent_Gossip_Messages.append(event.Msg_To_Deliver)
+
+        random_node_cnt = 0
+        while random_node_cnt < Config.GOSSIP_FAN_OUT:
+            random_node = random.choice(All_Nodes)
+            if random_node != self and (random_node not in self.Peer_list):
+                self.Peer_list.append(random_node)
+                random_node_cnt = random_node_cnt + 1
+
+        for peer in self.Peer_list:
+            if event.Event_Time + Block_Delays[self.Node_Id][peer.Node_Id] - event.Ref_Time <= event.Time_Out:
+                self.send_msg(event, peer, Block_Delays[self.Node_Id][peer.Node_Id])
+            else:
+                pass
+
+        self.Peer_list.clear()
+
+        if len(self.Sent_Gossip_Messages) == 1:
+            new_event = Event(event.Ref_Time + Config.SOURCE_GOSSIP_TIME_OUT,
+                              event.Ref_Time + Config.SOURCE_GOSSIP_TIME_OUT,
+                              Event_Type.FINAL_RESULT_EVENT,
+                              No_Message(),
+                              Config.TIME_OUT_NOT_APPLICABLE,
+                              self,
+                              self,
+                              event.Round_Number,
+                              event.Step_Number)
+            EventQ.add(new_event)
 
     def compute_final_result(self):
         # TODO
