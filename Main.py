@@ -51,5 +51,3 @@ if __name__ == "__main__":
         execute_event(ev)
 
     print("Simulation Completed!")
-
-

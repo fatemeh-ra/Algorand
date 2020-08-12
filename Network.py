@@ -7,7 +7,7 @@ import numpy as np
 Num_of_Nodes = 0
 All_Nodes = []
 Block_Delays = []
-EventQ = SortedList()
+EventQ = SortedList([])
 
 
 class Event_Type(int, Enum):
@@ -46,10 +46,14 @@ class Block(object):
 class Block_Propose_Msg(object):
     def __init__(self, prevBlockHash, thisBlockContent):
         self.block = Block(thisBlockContent, prevBlockHash)
-        self.sourceNode = self
+        # self.Source_Node = self
+        self.Source_List = []
 
     def __str__(self):
         return "\n" + "block = " + str(self.block)
+
+    def Add_Source_Node(self, node):
+        self.Source_List.append(node)
 
 
 class Source_Gossip_Msg(object):

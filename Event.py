@@ -11,4 +11,3 @@ class Event(object):
         self.Source_Node = sourceNode
         self.Round_Number = roundNumber
         self.Step_Number = stepNumber
-
