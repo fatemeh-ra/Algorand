@@ -20,11 +20,11 @@ class Node(object):
         self.Peer_list = []
         # self.Message_received = []
         self.Block_Chain = [prev_block]
-        self.Incoming_Block = []
+        self.Incoming_Block = None
         self.Received_New_Block = False
 
         self.Sent_Gossip_Messages = []
-        self.Block_Source_Nodes = []
+        self.Block_Source_Node = None
 
     def __str__(self):
         return str(self.Node_Id)
@@ -49,24 +49,29 @@ class Node(object):
         EventQ.add(new_event)
 
     def send_block_gossip(self, event):
-        # TODO Check the path of the block source
-        self.Block_Source_Nodes.append(event.Source_Node)
-        new_source_gossip_msg = Source_Gossip_Msg(self, event.Source_Node)
-
-        new_event = Event(event.Ref_Time + Config.BLOCK_GOSSIP_TIME_OUT,
-                          event.Ref_Time + Config.BLOCK_GOSSIP_TIME_OUT,
-                          Event_Type.SOURCE_NODE_GOSSIP_EVENT,
-                          new_source_gossip_msg,
-                          Config.SOURCE_GOSSIP_TIME_OUT,
-                          self,
-                          self,
-                          event.Round_Number,
-                          event.Step_Number)
-        EventQ.add(new_event)
-
         if not self.Received_New_Block:
+            path = event.Msg_To_Deliver.Source_List
+            for node in path:
+                if node.Credit == 0:
+                    return
+
             self.Incoming_Block = event.Msg_To_Deliver.block
             self.Received_New_Block = True
+
+            self.Block_Source_Node = event.Source_Node
+            new_source_gossip_msg = Source_Gossip_Msg(self, event.Source_Node)
+
+            new_event = Event(event.Ref_Time + Config.BLOCK_GOSSIP_TIME_OUT,
+                              event.Ref_Time + Config.BLOCK_GOSSIP_TIME_OUT,
+                              Event_Type.SOURCE_NODE_GOSSIP_EVENT,
+                              new_source_gossip_msg,
+                              Config.SOURCE_GOSSIP_TIME_OUT,
+                              self,
+                              self,
+                              event.Round_Number,
+                              event.Step_Number)
+            EventQ.add(new_event)
+
             message = event.Msg_To_Deliver
 
             random_node_cnt = 0
