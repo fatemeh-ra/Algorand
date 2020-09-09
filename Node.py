@@ -1,6 +1,6 @@
 from Network import *
 from Event import Event
-from DAG import Construct_DAG
+from Tree import Contribution_Tree
 import Config
 import hashlib
 import secrets
@@ -25,6 +25,7 @@ class Node(object):
 
         self.Sent_Gossip_Messages = []
         self.Block_Source_Node = None
+        self.final_reward_set = []
 
     def __str__(self):
         return str(self.Node_Id)
@@ -122,16 +123,13 @@ class Node(object):
             EventQ.add(new_event)
 
     def compute_final_result(self):
-        credits = Construct_DAG(self.Sent_Gossip_Messages)
-        sorted_credits = sorted(credits.items(), key=lambda x: x[1], reverse=True)
-        c = 0
+        tree = Contribution_Tree(self.Sent_Gossip_Messages)
+        tree.compute_score()
+        self.final_reward_set = tree.deepening_choose()
+
         print("DAG created for Node " + str(self) + "Nodes in Final Result:")
-        for k, v in sorted_credits:
-            if c < Config.DAG_MAX_NODE:
-                print(str(k) + " with total credit = " + str(v))
-            else:
-                break
-            c += 1
+        for k in self.final_reward_set:
+            print(str(k) + ", ", end='')
 
     def send_msg(self, event, dstNode, deltaTime, msg):
         new_event = Event(event.Ref_Time,
