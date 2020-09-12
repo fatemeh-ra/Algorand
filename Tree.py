@@ -18,12 +18,13 @@ class Contribution_Tree(object):
         self.Score = {}
 
     def compute_score(self, currant):
-        total_score = 1
+        total_score = 0
         for i in self.tree_edges[currant]:
             if not self.Visited[i]:
                 self.Visited[i] = 1
                 self.compute_score(i)
             total_score += self.Score[i]
+            total_score += All_Nodes[i].Credit
         self.Score[currant] = total_score
 
     def deepening_choose(self):
@@ -36,7 +37,7 @@ class Contribution_Tree(object):
             max_tmp = -1
             tmp = -1
             for i in self.tree_edges[currant]:
-                if self.Score[i] > 0 and self.Score[i] > max_tmp and self.Visited[i] != 1:
+                if self.Score[i] > 0 and self.Score[i] > max_tmp and self.Visited[i] == 0:
                     max_tmp = self.Score[i]
                     tmp = i
             if tmp == -1:
@@ -60,7 +61,7 @@ class Contribution_Tree(object):
             max_tmp = -1
             tmp = -1
             for i in self.tree_edges[currant]:
-                if self.Score[i] > 0 and self.Score[i] > max_tmp and self.Visited[i] != 1:
+                if self.Score[i] > 0 and self.Score[i] > max_tmp and self.Visited[i] == 0:
                     max_tmp = self.Score[i]
                     tmp = i
             if tmp == -1:

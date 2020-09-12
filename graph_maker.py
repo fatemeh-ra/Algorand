@@ -23,7 +23,7 @@ for N in Nodes:
             break
 
 
-file = open("graph1_100.txt", "w")
+file = open("graph1_50000.txt", "w")
 General_Info = {}
 General_Info['Num_of_Nodes'] = Num_of_Nodes
 General_Info['Num_of_Regions'] = len(Region_List)
@@ -44,13 +44,15 @@ for i in range(Num_of_Nodes):
     Info_String = json.dumps(Info)
     file.write(Info_String+'\n')
 
-for i in range(Num_of_Nodes):
-    for j in range(Num_of_Nodes):
-        if i == j:
-            file.write('0 ')
-            continue
-        min_Bandwidth = min(Node_Download_Bandwidth[i], Node_Upload_bandwidth[j])
-        L = floor(LATENCY[Node_Region[i]][Node_Region[j]] + Block_size / min_Bandwidth)
-        file.write(str(L) + ' ')
-    file.write('\n')
+# for i in range(Num_of_Nodes):
+#     for j in range(Num_of_Nodes):
+#         if i == j:
+#             file.write('0 ')
+#             continue
+#         # min_Bandwidth = min(Node_Download_Bandwidth[i], Node_Upload_bandwidth[j])
+#         # L = floor(LATENCY[Node_Region[i]][Node_Region[j]] + Block_size / min_Bandwidth)
+#         # L = floor(np.random.normal(LATENCY[Node_Region[i]][Node_Region[j]], 50))
+#         L = LATENCY[Node_Region[i]][Node_Region[j]]
+#         file.write(str(L) + ' ')
+#     file.write('\n')
 

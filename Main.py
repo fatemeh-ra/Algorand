@@ -42,18 +42,18 @@ def init_network(path):
     for i in range(Num_of_Nodes):
         info = json.loads(file.readline())
         incentive = np.random.random()
-        n = Node(i, info['Download'], info['Upload'], incentive, info['Region_id']
+        n = Node(i, info['Download'], info['Upload'], incentive, info['Region_id'] - 1
                  , info['Region_name'], prev_block, info['Credit'])
         All_Nodes.append(n)
 
-    for i in range(Num_of_Nodes):
-        for j in range(Num_of_Nodes):
-            delay = [int(x) for x in file.readline().split()]
-            Block_Delays.append(delay)
+    # for i in range(Num_of_Nodes):
+    #     for j in range(Num_of_Nodes):
+    #         delay = [int(x) for x in file.readline().split()]
+    #         Delays.append(delay)
 
 
 if __name__ == "__main__":
-    init_network('graph1_100.txt')
+    init_network('graph1_50000.txt')
     print("Hello! Simulation Started!\n" + "Using "+str(Num_of_Nodes)+" in this Simulation")
 
     proposer_node_id = floor(np.random.random()*Num_of_Nodes)
@@ -68,10 +68,13 @@ if __name__ == "__main__":
                   1,
                   0)
     EventQ.add(event)
+    node.Incentive = 1
+    print("root : ", proposer_node_id)
 
+    file = open("log.txt", "w")
     while len(EventQ):
         ev = EventQ.pop(0)
-        print(ev)
+        file.write(str(ev) + '\n')
         execute_event(ev)
 
     print("Simulation Completed!")

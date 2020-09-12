@@ -5,7 +5,7 @@ from enum import Enum
 
 Num_of_Nodes = 0
 All_Nodes = []
-Block_Delays = []
+Delays = []
 EventQ = SortedList([])
 
 
@@ -32,7 +32,8 @@ class Block_Propose_Msg(object):
         self.Source_List = []
 
     def __str__(self):
-        return "block propose message\n" + "block = " + str(self.block) + "\n"
+        STR = [str(i) for i in self.Source_List]
+        return "Source list = " + str(STR) + " "
 
     def Add_Source_Node(self, node):
         self.Source_List.append(node)
@@ -44,7 +45,7 @@ class Source_Gossip_Msg(object):
         self.Sender_Node = Sender
 
     def __str__(self):
-        return "Gossip message\n" + "block from " + str(self.Sender_Node) + " to " + str(self.Receiver_Node) + "\n"
+        return "Gossip message " + "block from " + str(self.Sender_Node) + " to " + str(self.Receiver_Node) + "\n"
 
 
 class No_Message(object):

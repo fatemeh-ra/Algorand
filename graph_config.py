@@ -1,5 +1,5 @@
 
-Num_of_Nodes = 100
+Num_of_Nodes = 50000
 
 Block_size = 100000000
 

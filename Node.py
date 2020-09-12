@@ -1,11 +1,12 @@
 from Network import *
 from Event import Event
 from Tree import Contribution_Tree
+from math import floor
 import Config
 import hashlib
 import secrets
 import random
-
+import copy
 
 class Node(object):
 
@@ -51,14 +52,18 @@ class Node(object):
 
     def send_block_gossip(self, event):
         if not self.Received_New_Block:
+            # check path for zero credit nodes
+            print(str(self) + " received block")
             path = event.Msg_To_Deliver.Source_List
             for node in path:
                 if node.Credit == 0:
                     return
 
+            # add message to list
             self.Incoming_Block = event.Msg_To_Deliver.block
             self.Received_New_Block = True
 
+            # make event for source node proposal
             self.Block_Source_Node = event.Source_Node
             new_source_gossip_msg = Source_Gossip_Msg(self, event.Source_Node)
 
@@ -71,10 +76,22 @@ class Node(object):
                               self,
                               event.Round_Number,
                               event.Step_Number)
-            EventQ.add(new_event)
+            #EventQ.add(new_event)
+
+            new_event = Event(event.Ref_Time + Config.BLOCK_GOSSIP_TIME_OUT + Config.SOURCE_GOSSIP_TIME_OUT,
+                              event.Ref_Time + Config.BLOCK_GOSSIP_TIME_OUT + Config.SOURCE_GOSSIP_TIME_OUT,
+                              Event_Type.FINAL_RESULT_EVENT,
+                              No_Message(),
+                              Config.TIME_OUT_NOT_APPLICABLE,
+                              self,
+                              self,
+                              event.Round_Number,
+                              event.Step_Number)
+            #EventQ.add(new_event)
 
             message = event.Msg_To_Deliver
 
+            # gossip the block
             random_node_cnt = 0
             while random_node_cnt < Config.NODE_AVERAGE_LINKS * self.Incentive:
                 random_node = random.choice(All_Nodes)
@@ -83,14 +100,20 @@ class Node(object):
                         self.Peer_list.append(random_node)
                         random_node_cnt = random_node_cnt + 1
 
-            message.Add_Source_Node(self)
+            new_message = copy.deepcopy(message)
+            new_message.Add_Source_Node(self)
             for peer in self.Peer_list:
-                if event.Event_Time + Block_Delays[self.Node_Id][peer.Node_Id] - event.Ref_Time < event.Time_Out:
-                    self.send_msg(event, peer, Block_Delays[self.Node_Id][peer.Node_Id], message)
+                delay = Config.LATENCY[self.Region_Id][peer.Region_Id] + \
+                        floor(min(self.Upload_bandwidth, peer.Download_bandwidth)/Config.BLOCK_SIZE * 1000)
+                if event.Event_Time + delay - event.Ref_Time < event.Time_Out:
+                    self.send_msg(event, peer, delay, new_message)
                 else:
                     pass
 
             self.Peer_list.clear()
+
+        else:
+            pass
 
     def send_source_node_gossip(self, event):
         if event.Msg_To_Deliver in self.Sent_Gossip_Messages:
@@ -106,28 +129,16 @@ class Node(object):
                 random_node_cnt = random_node_cnt + 1
 
         for peer in self.Peer_list:
-            self.send_msg(event, peer, 0, event.Msg_To_Deliver)
+            self.send_msg(event, peer, Config.LATENCY[self.Region_Id][peer.Region_Id], event.Msg_To_Deliver)
 
         self.Peer_list.clear()
 
-        if len(self.Sent_Gossip_Messages) == 1:
-            new_event = Event(event.Ref_Time + Config.SOURCE_GOSSIP_TIME_OUT,
-                              event.Ref_Time + Config.SOURCE_GOSSIP_TIME_OUT,
-                              Event_Type.FINAL_RESULT_EVENT,
-                              No_Message(),
-                              Config.TIME_OUT_NOT_APPLICABLE,
-                              self,
-                              self,
-                              event.Round_Number,
-                              event.Step_Number)
-            EventQ.add(new_event)
-
     def compute_final_result(self):
         tree = Contribution_Tree(self.Sent_Gossip_Messages)
-        tree.compute_score()
+        tree.compute_score(tree.root)
         self.final_reward_set = tree.deepening_choose()
 
-        print("DAG created for Node " + str(self) + "Nodes in Final Result:")
+        print("DAG created for Node " + str(self) + " Nodes in Final Result:")
         for k in self.final_reward_set:
             print(str(k) + ", ", end='')
 
