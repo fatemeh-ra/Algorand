@@ -27,25 +27,29 @@ class Block(object):
 
 
 class Block_Propose_Msg(object):
-    def __init__(self, block, source_list):
+    def __init__(self, block, source_list, selected_agent):
         self.Block = block
         self.Source_List = source_list
+        self.Selected_Agent = selected_agent
 
     @classmethod
-    def new_message(cls, prevBlockHash, thisBlockContent):
+    def new_message(cls, prevBlockHash, thisBlockContent, agent):
         block = Block(thisBlockContent, prevBlockHash)
-        return cls(block, [])
+        return cls(block, [], agent)
 
     @classmethod
     def relay_message(cls, Msg):
-        return cls(Msg.Block, copy.copy(Msg.Source_List))
+        return cls(Msg.Block, copy.copy(Msg.Source_List), Msg.Selected_Agent)
 
     def __str__(self):
         STR = [str(i) for i in self.Source_List]
-        return "Source list = " + str(STR) + " "
+        return "Source list = " + str(STR) + ", Agent = " + str(self.Selected_Agent) + " "
 
-    def Add_Source_Node(self, node):
+    def add_source_node(self, node):
         self.Source_List.append(node)
+
+    def change_agent(self, agent):
+        self.Selected_Agent = agent
 
 
 class Source_Gossip_Msg(object):

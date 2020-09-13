@@ -34,7 +34,7 @@ for i in range(Num_of_Nodes):
     Node_Download_Bandwidth.append(floor(np.random.normal(DOWNLOAD_BANDWIDTH[Node_Region[i]],
                                                REGION_VARIANCE[Node_Region[i]] * 100000)))
     Node_Upload_bandwidth.append(floor(np.random.normal(UPLOAD_BANDWIDTH[Node_Region[i]],
-                                               REGION_VARIANCE[Node_Region[i]] * 100000)))
+                                               REGION_VARIANCE[Node_Region[i]] * 10000)))
     Info = {}
     Info['Region_id'] = Node_Region[i] + 1
     Info['Region_name'] = Region_List[Node_Region[i]]

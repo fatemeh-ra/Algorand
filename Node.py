@@ -23,6 +23,7 @@ class Node(object):
         self.Block_Chain = [prev_block]
         self.Incoming_Block = None
         self.Received_New_Block = False
+        self.Is_Agent = False
 
         self.Sent_Gossip_Messages = []
         self.Block_Source_Node = None
@@ -36,7 +37,7 @@ class Node(object):
         prev_block_hash = hashlib.sha256(prev_block.__str__().encode()).hexdigest()
         new_block_content = secrets.randbits(256)
 
-        new_block_msg = Block_Propose_Msg.new_message(prev_block_hash, new_block_content)
+        new_block_msg = Block_Propose_Msg.new_message(prev_block_hash, new_block_content, self)
 
         new_event = Event(event.Ref_Time,
                           event.Event_Time,
@@ -53,7 +54,8 @@ class Node(object):
     def send_block_gossip(self, event):
         if not self.Received_New_Block:
             # check path for zero credit nodes
-            print(str(self) + " received block")
+            print(str(self) + " received block " , (event.Event_Time))
+            if event.Event_Time < 0 : exit()
             path = event.Msg_To_Deliver.Source_List
             for node in path:
                 if node.Credit == 0:
@@ -101,10 +103,12 @@ class Node(object):
             #             random_node_cnt = random_node_cnt + 1
 
             new_message = Block_Propose_Msg.relay_message(event.Msg_To_Deliver)
-            new_message.Add_Source_Node(self)
+            new_message.add_source_node(self)
+            if self.Is_Agent:
+                new_message.change_agent(self)
             for peer in self.Peer_list:
                 delay = Config.LATENCY[self.Region_Id][peer.Region_Id] + \
-                        floor(min(self.Upload_bandwidth, peer.Download_bandwidth)/Config.BLOCK_SIZE * 1000)
+                        floor(Config.BLOCK_SIZE / min(self.Upload_bandwidth, peer.Download_bandwidth) * 1000)
                 if event.Event_Time + delay - event.Ref_Time < event.Time_Out:
                     self.send_msg(event, peer, delay, new_message)
                 else:
