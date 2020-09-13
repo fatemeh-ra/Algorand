@@ -2,6 +2,7 @@
 
 from sortedcontainers import SortedList
 from enum import Enum
+import copy
 
 Num_of_Nodes = 0
 All_Nodes = []
@@ -26,10 +27,18 @@ class Block(object):
 
 
 class Block_Propose_Msg(object):
-    def __init__(self, prevBlockHash, thisBlockContent):
-        self.block = Block(thisBlockContent, prevBlockHash)
-        # self.Source_Node = self
-        self.Source_List = []
+    def __init__(self, block, source_list):
+        self.Block = block
+        self.Source_List = source_list
+
+    @classmethod
+    def new_message(cls, prevBlockHash, thisBlockContent):
+        block = Block(thisBlockContent, prevBlockHash)
+        return cls(block, [])
+
+    @classmethod
+    def relay_message(cls, Msg):
+        return cls(Msg.Block, copy.copy(Msg.Source_List))
 
     def __str__(self):
         STR = [str(i) for i in self.Source_List]

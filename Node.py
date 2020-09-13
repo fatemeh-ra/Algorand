@@ -36,7 +36,7 @@ class Node(object):
         prev_block_hash = hashlib.sha256(prev_block.__str__().encode()).hexdigest()
         new_block_content = secrets.randbits(256)
 
-        new_block_msg = Block_Propose_Msg(prev_block_hash, new_block_content)
+        new_block_msg = Block_Propose_Msg.new_message(prev_block_hash, new_block_content)
 
         new_event = Event(event.Ref_Time,
                           event.Event_Time,
@@ -60,7 +60,7 @@ class Node(object):
                     return
 
             # add message to list
-            self.Incoming_Block = event.Msg_To_Deliver.block
+            self.Incoming_Block = event.Msg_To_Deliver.Block
             self.Received_New_Block = True
 
             # make event for source node proposal
@@ -92,15 +92,15 @@ class Node(object):
             message = event.Msg_To_Deliver
 
             # gossip the block
-            random_node_cnt = 0
-            while random_node_cnt < Config.NODE_AVERAGE_LINKS * self.Incentive:
-                random_node = random.choice(All_Nodes)
-                if random_node != self and (random_node not in self.Peer_list):
-                    if random_node not in message.Source_List:
-                        self.Peer_list.append(random_node)
-                        random_node_cnt = random_node_cnt + 1
+            # random_node_cnt = 0
+            # while random_node_cnt < Config.NODE_AVERAGE_LINKS * self.Incentive:
+            #     random_node = random.choice(All_Nodes)
+            #     if random_node != self and (random_node not in self.Peer_list):
+            #         if random_node not in message.Source_List:
+            #             self.Peer_list.append(random_node)
+            #             random_node_cnt = random_node_cnt + 1
 
-            new_message = copy.deepcopy(message)
+            new_message = Block_Propose_Msg.relay_message(event.Msg_To_Deliver)
             new_message.Add_Source_Node(self)
             for peer in self.Peer_list:
                 delay = Config.LATENCY[self.Region_Id][peer.Region_Id] + \
@@ -110,7 +110,7 @@ class Node(object):
                 else:
                     pass
 
-            self.Peer_list.clear()
+            # self.Peer_list.clear()
 
         else:
             pass
@@ -121,17 +121,17 @@ class Node(object):
 
         self.Sent_Gossip_Messages.append(event.Msg_To_Deliver)
 
-        random_node_cnt = 0
-        while random_node_cnt < Config.GOSSIP_FAN_OUT:
-            random_node = random.choice(All_Nodes)
-            if random_node != self and (random_node not in self.Peer_list):
-                self.Peer_list.append(random_node)
-                random_node_cnt = random_node_cnt + 1
+        # random_node_cnt = 0
+        # while random_node_cnt < Config.GOSSIP_FAN_OUT:
+        #     random_node = random.choice(All_Nodes)
+        #     if random_node != self and (random_node not in self.Peer_list):
+        #         self.Peer_list.append(random_node)
+        #         random_node_cnt = random_node_cnt + 1
 
         for peer in self.Peer_list:
             self.send_msg(event, peer, Config.LATENCY[self.Region_Id][peer.Region_Id], event.Msg_To_Deliver)
 
-        self.Peer_list.clear()
+        #self.Peer_list.clear()
 
     def compute_final_result(self):
         tree = Contribution_Tree(self.Sent_Gossip_Messages)

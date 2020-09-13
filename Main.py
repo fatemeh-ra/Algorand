@@ -51,10 +51,27 @@ def init_network(path):
     #         delay = [int(x) for x in file.readline().split()]
     #         Delays.append(delay)
 
+    for node in All_Nodes:
+        potential_list = {}
+        random_node_cnt = 0
+        while random_node_cnt < Num_of_Nodes*0.01:
+            random_node = random.choice(All_Nodes)
+            if random_node not in potential_list:
+                potential_list[random_node] = Config.LATENCY[node.Region_Id][random_node.Region_Id]
+                random_node_cnt = random_node_cnt + 1
+
+        cnt = 0
+        for i in sorted(potential_list.items(), key=lambda x: x[1]):
+            node.Peer_list.append(i[0])
+            i[0].Peer_list.append(node)
+            cnt += 1
+            if cnt == 4:
+                break
+
 
 if __name__ == "__main__":
-    init_network('graph1_50000.txt')
-    print("Hello! Simulation Started!\n" + "Using "+str(Num_of_Nodes)+" in this Simulation")
+    init_network('graph1_1000.txt')
+    print("Hello! Simulation Started!\n" + "Using "+str(Num_of_Nodes)+" nodes in this Simulation")
 
     proposer_node_id = floor(np.random.random()*Num_of_Nodes)
     node = All_Nodes[proposer_node_id]
