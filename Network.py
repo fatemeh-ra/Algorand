@@ -13,8 +13,10 @@ EventQ = SortedList([])
 class Event_Type(int, Enum):
     BLOCK_PROPOSE_EVENT = 1
     BLOCK_GOSSIP_EVENT = 2
-    SOURCE_NODE_GOSSIP_EVENT = 3
-    FINAL_RESULT_EVENT = 4
+    AGENT_MESSAGE_EVENT = 3
+    AGENT_AGGREGATION_EVENT = 4
+    SOURCE_NODE_GOSSIP_EVENT = 5
+    FINAL_RESULT_EVENT = 6
 
 
 class Block(object):

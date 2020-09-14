@@ -17,6 +17,12 @@ def execute_event(event):
     elif event_type == Event_Type.BLOCK_GOSSIP_EVENT:
         target_node.send_block_gossip(event)
 
+    elif event_type == Event_Type.AGENT_MESSAGE_EVENT:
+        target_node.agent_receive_message(event)
+
+    elif event_type == Event_Type.AGENT_AGGREGATION_EVENT:
+        target_node.agent_aggregation(event)
+
     elif event_type == Event_Type.SOURCE_NODE_GOSSIP_EVENT:
         target_node.send_source_node_gossip(event)
 
@@ -82,7 +88,8 @@ def init_network(path):
 
 
 if __name__ == "__main__":
-    init_network('graph1_50000.txt')
+    path = Config.GRAPH + "_" + str(Config.NUM_OF_NODES) + ".txt"
+    init_network(path)
     print("Hello! Simulation Started!\n" + "Using "+str(Num_of_Nodes)+" nodes in this Simulation")
 
     proposer_node_id = floor(np.random.random()*Num_of_Nodes)
@@ -98,6 +105,7 @@ if __name__ == "__main__":
                   0)
     EventQ.add(event)
     node.Incentive = 1
+    node.Is_Agent = True
     print("root : ", proposer_node_id)
 
     file = open("log2.txt", "w")

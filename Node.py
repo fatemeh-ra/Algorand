@@ -24,6 +24,7 @@ class Node(object):
         self.Incoming_Block = None
         self.Received_New_Block = False
         self.Is_Agent = False
+        self.Agent_list = []
 
         self.Sent_Gossip_Messages = []
         self.Block_Source_Node = None
@@ -65,20 +66,36 @@ class Node(object):
             self.Incoming_Block = event.Msg_To_Deliver.Block
             self.Received_New_Block = True
 
-            # make event for source node proposal
-            self.Block_Source_Node = event.Source_Node
-            new_source_gossip_msg = Source_Gossip_Msg(self, event.Source_Node)
+            # agent check
+            if self.Is_Agent:
+                new_event = Event(event.Ref_Time + Config.BLOCK_GOSSIP_TIME_OUT,
+                                  event.Ref_Time + Config.BLOCK_GOSSIP_TIME_OUT,
+                                  Event_Type.AGENT_AGGREGATION_EVENT,
+                                  None,
+                                  Config.SOURCE_GOSSIP_TIME_OUT,
+                                  self,
+                                  self,
+                                  event.Round_Number,
+                                  event.Step_Number)
+                EventQ.add(new_event)
+                self.Block_Source_Node = event.Source_Node
+                new_source_gossip_msg = Source_Gossip_Msg(self, event.Source_Node)
+                self.Agent_list.append(new_source_gossip_msg)
+            else:
+                # make event for source node proposal
+                self.Block_Source_Node = event.Source_Node
+                new_source_gossip_msg = Source_Gossip_Msg(self, event.Source_Node)
 
-            new_event = Event(event.Ref_Time + Config.BLOCK_GOSSIP_TIME_OUT,
-                              event.Ref_Time + Config.BLOCK_GOSSIP_TIME_OUT,
-                              Event_Type.SOURCE_NODE_GOSSIP_EVENT,
-                              new_source_gossip_msg,
-                              Config.SOURCE_GOSSIP_TIME_OUT,
-                              self,
-                              self,
-                              event.Round_Number,
-                              event.Step_Number)
-            #EventQ.add(new_event)
+                new_event = Event(event.Ref_Time,
+                                  event.Event_Time,
+                                  Event_Type.AGENT_MESSAGE_EVENT,
+                                  new_source_gossip_msg,
+                                  Config.SOURCE_GOSSIP_TIME_OUT,
+                                  event.Msg_To_Deliver.Selected_Agent,
+                                  self,
+                                  event.Round_Number,
+                                  event.Step_Number)
+                EventQ.add(new_event)
 
             new_event = Event(event.Ref_Time + Config.BLOCK_GOSSIP_TIME_OUT + Config.SOURCE_GOSSIP_TIME_OUT,
                               event.Ref_Time + Config.BLOCK_GOSSIP_TIME_OUT + Config.SOURCE_GOSSIP_TIME_OUT,
@@ -89,7 +106,7 @@ class Node(object):
                               self,
                               event.Round_Number,
                               event.Step_Number)
-            #EventQ.add(new_event)
+            # EventQ.add(new_event)
 
             message = event.Msg_To_Deliver
 
@@ -102,13 +119,16 @@ class Node(object):
             #             self.Peer_list.append(random_node)
             #             random_node_cnt = random_node_cnt + 1
 
+            # Block gossip
             new_message = Block_Propose_Msg.relay_message(event.Msg_To_Deliver)
             new_message.add_source_node(self)
             if self.Is_Agent:
                 new_message.change_agent(self)
             for peer in self.Peer_list:
-                delay = Config.LATENCY[self.Region_Id][peer.Region_Id] + \
-                        floor(Config.BLOCK_SIZE / min(self.Upload_bandwidth, peer.Download_bandwidth) * 1000)
+                y = (min(self.Upload_bandwidth, peer.Download_bandwidth) / 1000)
+                x = floor(Config.BLOCK_SIZE / (min(self.Upload_bandwidth, peer.Download_bandwidth) / 1000))
+                delay = Config.LATENCY[self.Region_Id][peer.Region_Id] + 5 +\
+                        floor(Config.BLOCK_SIZE / (min(self.Upload_bandwidth, peer.Download_bandwidth) / 1000))
                 if event.Event_Time + delay - event.Ref_Time < event.Time_Out:
                     self.send_msg(event, peer, delay, new_message)
                 else:
@@ -118,6 +138,23 @@ class Node(object):
 
         else:
             pass
+
+    def agent_receive_message(self, event):
+        self.Agent_list.append(event.Msg_To_Deliver)
+
+    def agent_aggregation(self, event):
+        print(str(self) + " is agent of", len(self.Agent_list), "nodes")
+        for peer in self.Peer_list:
+            new_event = Event(event.Ref_Time,
+                              event.Event_Time + Config.LATENCY[self.Region_Id][peer.Region_Id],
+                              Event_Type.SOURCE_NODE_GOSSIP_EVENT,
+                              self.Agent_list,
+                              Config.SOURCE_GOSSIP_TIME_OUT,
+                              peer,
+                              self,
+                              event.Round_Number,
+                              event.Step_Number)
+            EventQ.add(new_event)
 
     def send_source_node_gossip(self, event):
         if event.Msg_To_Deliver in self.Sent_Gossip_Messages:
@@ -135,7 +172,7 @@ class Node(object):
         for peer in self.Peer_list:
             self.send_msg(event, peer, Config.LATENCY[self.Region_Id][peer.Region_Id], event.Msg_To_Deliver)
 
-        #self.Peer_list.clear()
+        # self.Peer_list.clear()
 
     def compute_final_result(self):
         tree = Contribution_Tree(self.Sent_Gossip_Messages)

@@ -23,7 +23,7 @@ for N in Nodes:
             break
 
 
-file = open("graph1_50000.txt", "w")
+file = open("graph2_50000.txt", "w")
 General_Info = {}
 General_Info['Num_of_Nodes'] = Num_of_Nodes
 General_Info['Num_of_Regions'] = len(Region_List)
@@ -31,10 +31,12 @@ General_Info['Prev_Block'] = secrets.randbits(256)
 file.write(json.dumps(General_Info)+'\n')
 
 for i in range(Num_of_Nodes):
-    Node_Download_Bandwidth.append(floor(np.random.normal(DOWNLOAD_BANDWIDTH[Node_Region[i]],
-                                               REGION_VARIANCE[Node_Region[i]] * 100000)))
-    Node_Upload_bandwidth.append(floor(np.random.normal(UPLOAD_BANDWIDTH[Node_Region[i]],
-                                               REGION_VARIANCE[Node_Region[i]] * 10000)))
+    # Node_Download_Bandwidth.append(floor(np.random.normal(DOWNLOAD_BANDWIDTH[Node_Region[i]],
+    #                                            REGION_VARIANCE[Node_Region[i]] * 100000)))
+    # Node_Upload_bandwidth.append(floor(np.random.normal(UPLOAD_BANDWIDTH[Node_Region[i]],
+    #                                            REGION_VARIANCE[Node_Region[i]] * 10000)))
+    Node_Download_Bandwidth.append(DOWNLOAD_BANDWIDTH[Node_Region[i]])
+    Node_Upload_bandwidth.append(UPLOAD_BANDWIDTH[Node_Region[i]])
     Info = {}
     Info['Region_id'] = Node_Region[i] + 1
     Info['Region_name'] = Region_List[Node_Region[i]]
