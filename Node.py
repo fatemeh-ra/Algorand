@@ -8,6 +8,7 @@ import secrets
 import random
 import copy
 
+
 class Node(object):
 
     def __init__(self, Id, Download, Upload, incentive, region_id, region_name, prev_block, credit):
@@ -23,6 +24,8 @@ class Node(object):
         self.Block_Chain = [prev_block]
         self.Incoming_Block = None
         self.Received_New_Block = False
+        self.Received_Time = None
+
         self.Is_Agent = False
         self.Agent_list = []
 
@@ -55,18 +58,27 @@ class Node(object):
     def send_block_gossip(self, event):
         if not self.Received_New_Block:
             # check path for zero credit nodes
-            print(str(self) + " received block " , (event.Event_Time))
+
             if event.Event_Time < 0 : exit()
             path = event.Msg_To_Deliver.Source_List
             for node in path:
                 if node.Credit == 0:
                     return
 
+            # print(str(self) + " received block ", (event.Event_Time))
+
+            self.Received_Time = event.Event_Time
             # add message to list
             self.Incoming_Block = event.Msg_To_Deliver.Block
             self.Received_New_Block = True
 
             # agent check
+            r = random.random()
+            time = event.Event_Time
+            if 1 < event.Msg_To_Deliver.Agent_Probability: # * (1 - (time/60000) ** 2):
+                self.Is_Agent = True
+                Agents.append(self)
+
             if self.Is_Agent:
                 new_event = Event(event.Ref_Time + Config.BLOCK_GOSSIP_TIME_OUT,
                                   event.Ref_Time + Config.BLOCK_GOSSIP_TIME_OUT,
@@ -120,16 +132,17 @@ class Node(object):
             #             random_node_cnt = random_node_cnt + 1
 
             # Block gossip
-            new_message = Block_Propose_Msg.relay_message(event.Msg_To_Deliver)
-            new_message.add_source_node(self)
-            if self.Is_Agent:
-                new_message.change_agent(self)
             for peer in self.Peer_list:
-                y = (min(self.Upload_bandwidth, peer.Download_bandwidth) / 1000)
-                x = floor(Config.BLOCK_SIZE / (min(self.Upload_bandwidth, peer.Download_bandwidth) / 1000))
-                delay = Config.LATENCY[self.Region_Id][peer.Region_Id] + 5 +\
+                delay = Config.LATENCY[self.Region_Id][peer.Region_Id] + 5 + \
                         floor(Config.BLOCK_SIZE / (min(self.Upload_bandwidth, peer.Download_bandwidth) / 1000))
+
                 if event.Event_Time + delay - event.Ref_Time < event.Time_Out:
+                    new_message = Block_Propose_Msg.relay_message(event.Msg_To_Deliver,
+                                                                  event.Event_Time - event.Ref_Time + delay)
+                    new_message.add_source_node(self)
+                    if self.Is_Agent:
+                        new_message.change_agent(self)
+                        new_message.reset_probability()
                     self.send_msg(event, peer, delay, new_message)
                 else:
                     pass
@@ -143,7 +156,8 @@ class Node(object):
         self.Agent_list.append(event.Msg_To_Deliver)
 
     def agent_aggregation(self, event):
-        print(str(self) + " is agent of", len(self.Agent_list), "nodes")
+        # print(str(self) + " is agent of", len(self.Agent_list), "nodes")
+        print(self.Received_Time, len(self.Agent_list))
         for peer in self.Peer_list:
             new_event = Event(event.Ref_Time,
                               event.Event_Time + Config.LATENCY[self.Region_Id][peer.Region_Id],

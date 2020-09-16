@@ -6,6 +6,7 @@ from math import floor
 import json
 import numpy as np
 
+cnt = 0
 
 def execute_event(event):
     event_type = event.Event_Type
@@ -18,13 +19,17 @@ def execute_event(event):
         target_node.send_block_gossip(event)
 
     elif event_type == Event_Type.AGENT_MESSAGE_EVENT:
+        global cnt
+        cnt += 1
         target_node.agent_receive_message(event)
 
     elif event_type == Event_Type.AGENT_AGGREGATION_EVENT:
         target_node.agent_aggregation(event)
+        # pass
 
     elif event_type == Event_Type.SOURCE_NODE_GOSSIP_EVENT:
-        target_node.send_source_node_gossip(event)
+        # target_node.send_source_node_gossip(event)
+        pass
 
     elif event_type == Event_Type.FINAL_RESULT_EVENT:
         target_node.compute_final_result()
@@ -74,23 +79,23 @@ def init_network(path):
             if cnt == Config.NODE_AVERAGE_LINKS/2:
                 break
 
-    agent_list = []
-    random_node_cnt = 0
-    while random_node_cnt < Config.NUM_OF_AGENT_NODES:
-        random_node = random.choice(All_Nodes)
-        if random_node not in agent_list:
-            agent_list.append(random_node)
-            random_node.Is_Agent = True
-            random_node_cnt = random_node_cnt + 1
-
-    str_agent = [str(i) for i in agent_list]
-    print("Agent list :", str_agent)
+    # agent_list = []
+    # random_node_cnt = 0
+    # while random_node_cnt < Config.NUM_OF_AGENT_NODES:
+    #     random_node = random.choice(All_Nodes)
+    #     if random_node not in agent_list:
+    #         agent_list.append(random_node)
+    #         random_node.Is_Agent = True
+    #         random_node_cnt = random_node_cnt + 1
+    #
+    # str_agent = [str(i) for i in agent_list]
+    # print("Agent list :", str_agent)
 
 
 if __name__ == "__main__":
     path = Config.GRAPH + "_" + str(Config.NUM_OF_NODES) + ".txt"
     init_network(path)
-    print("Hello! Simulation Started!\n" + "Using "+str(Num_of_Nodes)+" nodes in this Simulation")
+    # print("Hello! Simulation Started!\n" + "Using "+str(Num_of_Nodes)+" nodes in this Simulation")
 
     proposer_node_id = floor(np.random.random()*Num_of_Nodes)
     node = All_Nodes[proposer_node_id]
@@ -106,7 +111,7 @@ if __name__ == "__main__":
     EventQ.add(event)
     node.Incentive = 1
     node.Is_Agent = True
-    print("root : ", proposer_node_id)
+    # print("root : ", proposer_node_id)
 
     file = open("log2.txt", "w")
     while len(EventQ):
@@ -115,5 +120,7 @@ if __name__ == "__main__":
         execute_event(ev)
 
     file.close()
+    # print(len(Agents), "Agents")
+    # print(cnt)
 
-    print("Simulation Completed!")
+    # print("Simulation Completed!")
