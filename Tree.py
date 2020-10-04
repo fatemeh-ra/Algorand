@@ -8,9 +8,9 @@ class Contribution_Tree(object):
         self.tree_edges = [[] for i in range(len(All_Nodes))]
         self.sender_set = set()
         for m in Sent_Gossip_Messages:
+            self.sender_set.add(m.Sender_Node.Node_Id)
             if m.Sender_Node == m.Receiver_Node:
                 self.root = m.Sender_Node.Node_Id
-                self.sender_set.add(m.Sender_Node.Node_Id)
                 continue
             x = m.Sender_Node.Node_Id
             self.tree_edges[x].append(m.Receiver_Node.Node_Id)

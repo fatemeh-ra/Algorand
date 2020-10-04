@@ -40,14 +40,15 @@ class Block_Propose_Msg(object):
     @classmethod
     def new_message(cls, prevBlockHash, thisBlockContent, agent):
         block = Block(thisBlockContent, prevBlockHash)
-        return cls(block, [], agent, 0.4)
+        return cls(block, [], agent, 0)
 
     @classmethod
     def relay_message(cls, Msg, time):
         tmp = 1
-        if time > 35000 : tmp = 0
+        if len(Msg.Source_List) > 1 : tmp = 0
+        if time > 40000 : tmp = 0
         return cls(Msg.Block, copy.copy(Msg.Source_List), Msg.Selected_Agent,
-                   Msg.Agent_Probability + ((Config.AGENT_PROBABILITY_INCREASE))*tmp)
+                   (Msg.Agent_Probability + (Config.AGENT_PROBABILITY_INCREASE))*tmp)
                    # (1 - ((time / 40000) ** 3)))*tmp)   #  - (len(Msg.Source_List)**1.5/100)
 
     def __str__(self):
@@ -61,7 +62,7 @@ class Block_Propose_Msg(object):
         self.Selected_Agent = agent
 
     def reset_probability(self):
-        self.Agent_Probability = 0
+        self.Agent_Probability = 1
 
 
 class Source_Gossip_Msg(object):

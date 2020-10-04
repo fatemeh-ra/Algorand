@@ -65,7 +65,9 @@ class Node(object):
                 if node.Credit == 0:
                     return
 
-            # print(str(self) + " received block ", (event.Event_Time))
+            Config.Node_Log.write(str(self)+" "+str(event.Event_Time)+" "+str(self.Region_Id)+" "
+                                  +str(len(event.Msg_To_Deliver.Source_List))+" "+str(len(self.Peer_list))+'\n')
+
 
             self.Received_Time = event.Event_Time
             # add message to list
@@ -75,9 +77,33 @@ class Node(object):
             # agent check
             r = random.random()
             time = event.Event_Time
-            if 1 < event.Msg_To_Deliver.Agent_Probability: # * (1 - (time/60000) ** 2):
+            if 1 <= event.Msg_To_Deliver.Agent_Probability: # * (1 - (time/60000) ** 2):
                 self.Is_Agent = True
                 Agents.append(self)
+
+            # Block gossip
+            agent_flag = False
+            D = 0
+            for peer in self.Peer_list:
+                delay = Config.LATENCY[self.Region_Id][peer.Region_Id] + floor((Config.BLOCK_SIZE/232)*0.113) + \
+                        floor(Config.BLOCK_SIZE*8 / (min(self.Upload_bandwidth, peer.Download_bandwidth) / 1000)) + D
+                D += floor(Config.BLOCK_SIZE*8 / (min(self.Upload_bandwidth, peer.Download_bandwidth) / 1000))
+
+                if event.Event_Time + delay - event.Ref_Time < event.Time_Out and peer.Received_New_Block == False:
+                    agent_flag = True
+                    new_message = Block_Propose_Msg.relay_message(event.Msg_To_Deliver,
+                                                                  event.Event_Time - event.Ref_Time + delay)
+                    new_message.add_source_node(self)
+                    if self.Is_Agent:
+                        new_message.change_agent(self)
+                        new_message.reset_probability()
+                    self.send_msg(event, peer, delay, new_message)
+                else:
+                    pass
+
+            # new events
+            if self.Is_Agent and agent_flag == False:
+                self.Is_Agent = False
 
             if self.Is_Agent:
                 new_event = Event(event.Ref_Time + Config.BLOCK_GOSSIP_TIME_OUT,
@@ -92,11 +118,14 @@ class Node(object):
                 EventQ.add(new_event)
                 self.Block_Source_Node = event.Source_Node
                 new_source_gossip_msg = Source_Gossip_Msg(self, event.Source_Node)
+
+                Config.Source_Msg_Log.write(str(new_source_gossip_msg))
                 self.Agent_list.append(new_source_gossip_msg)
             else:
                 # make event for source node proposal
                 self.Block_Source_Node = event.Source_Node
                 new_source_gossip_msg = Source_Gossip_Msg(self, event.Source_Node)
+                Config.Source_Msg_Log.write(str(new_source_gossip_msg))
 
                 new_event = Event(event.Ref_Time,
                                   event.Event_Time,
@@ -120,35 +149,6 @@ class Node(object):
                               event.Step_Number)
             # EventQ.add(new_event)
 
-            message = event.Msg_To_Deliver
-
-            # gossip the block
-            # random_node_cnt = 0
-            # while random_node_cnt < Config.NODE_AVERAGE_LINKS * self.Incentive:
-            #     random_node = random.choice(All_Nodes)
-            #     if random_node != self and (random_node not in self.Peer_list):
-            #         if random_node not in message.Source_List:
-            #             self.Peer_list.append(random_node)
-            #             random_node_cnt = random_node_cnt + 1
-
-            # Block gossip
-            for peer in self.Peer_list:
-                delay = Config.LATENCY[self.Region_Id][peer.Region_Id] + 5 + \
-                        floor(Config.BLOCK_SIZE / (min(self.Upload_bandwidth, peer.Download_bandwidth) / 1000))
-
-                if event.Event_Time + delay - event.Ref_Time < event.Time_Out:
-                    new_message = Block_Propose_Msg.relay_message(event.Msg_To_Deliver,
-                                                                  event.Event_Time - event.Ref_Time + delay)
-                    new_message.add_source_node(self)
-                    if self.Is_Agent:
-                        new_message.change_agent(self)
-                        new_message.reset_probability()
-                    self.send_msg(event, peer, delay, new_message)
-                else:
-                    pass
-
-            # self.Peer_list.clear()
-
         else:
             pass
 
@@ -157,7 +157,7 @@ class Node(object):
 
     def agent_aggregation(self, event):
         # print(str(self) + " is agent of", len(self.Agent_list), "nodes")
-        print(self.Received_Time, len(self.Agent_list))
+        Config.Agent_Log.write(str(self)+" "+str(self.Received_Time)+" "+str(len(self.Agent_list))+'\n')
         for peer in self.Peer_list:
             new_event = Event(event.Ref_Time,
                               event.Event_Time + Config.LATENCY[self.Region_Id][peer.Region_Id],

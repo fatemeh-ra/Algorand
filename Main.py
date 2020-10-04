@@ -2,6 +2,7 @@ from Node import *
 from Event import *
 import Config
 import sys
+import os
 from math import floor
 import json
 import numpy as np
@@ -43,9 +44,9 @@ def handler(signum, frame):
     sys.exit()
 
 
-def init_network(path):
+def init_network():
     global Num_of_Nodes
-    file = open(path, 'r')
+    file = open(Config.Network_Path, 'r')
     general_info = json.loads(file.readline())
     Num_of_Nodes = general_info['Num_of_Nodes']
     prev_block = general_info['Prev_Block']
@@ -92,10 +93,28 @@ def init_network(path):
     # print("Agent list :", str_agent)
 
 
+def init_paths():
+    n = 1
+    while(os.path.exists("Logs/Log_"+str(n))):
+        n += 1
+    Config.Main_Path = "Logs/Log_"+str(n)
+    os.mkdir(Config.Main_Path)
+    Event_Log_Path = Config.Main_Path + "/Event_Log.txt"
+    Agent_Log_Path = Config.Main_Path + "/Agent_Log.txt"
+    Source_Msg_Path = Config.Main_Path + "/Source_Msg_Log.txt"
+    Node_Log_Path = Config.Main_Path + "/Node_Log.txt"
+    Config.Network_Path = "Networks/" + Config.GRAPH + "_" + str(Config.NUM_OF_NODES) + ".txt"
+
+    Config.Event_Log = open(Event_Log_Path, 'w')
+    Config.Agent_Log = open(Agent_Log_Path, 'w')
+    Config.Source_Msg_Log = open(Source_Msg_Path, 'w')
+    Config.Node_Log = open(Node_Log_Path, 'w')
+
+
 if __name__ == "__main__":
-    path = Config.GRAPH + "_" + str(Config.NUM_OF_NODES) + ".txt"
-    init_network(path)
-    # print("Hello! Simulation Started!\n" + "Using "+str(Num_of_Nodes)+" nodes in this Simulation")
+    init_paths()
+    init_network()
+    print("Hello! Simulation Started!\n" + "Using "+str(Num_of_Nodes)+" nodes in this Simulation")
 
     proposer_node_id = floor(np.random.random()*Num_of_Nodes)
     node = All_Nodes[proposer_node_id]
@@ -111,16 +130,14 @@ if __name__ == "__main__":
     EventQ.add(event)
     node.Incentive = 1
     node.Is_Agent = True
-    # print("root : ", proposer_node_id)
+    print("Proposer Node ID : ", proposer_node_id)
 
-    file = open("log2.txt", "w")
     while len(EventQ):
         ev = EventQ.pop(0)
-        file.write(str(ev) + '\n')
+        Config.Event_Log.write(str(ev) + '\n')
         execute_event(ev)
 
-    file.close()
     # print(len(Agents), "Agents")
     # print(cnt)
 
-    # print("Simulation Completed!")
+    print("Simulation Completed!")
